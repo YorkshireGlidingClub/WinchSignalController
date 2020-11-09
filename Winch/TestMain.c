@@ -1,7 +1,7 @@
 
 /*
 To build:
-gcc TestMain.c -pthread o TestMain
+gcc TestMain.c -pthread -o TestMain
 */
 
 #include <stdio.h>
@@ -9,15 +9,25 @@ gcc TestMain.c -pthread o TestMain
 #include <unistd.h>
 #include "Winch.h"
 #include "Winch.c"
+#include "Inputs.h"
+#include "Inputs.c"
 
-#define SLEEP_DURATION_US 100000
-#define TICK_DURATION_MS  100
+#define SLEEP_DURATION_US       10000ul
+#define TICK_DURATION_MS        10ul
+#define INPUT_TRANSITION_TIME   100ul
 
 pthread_t thread;
 
-bool bStopPressed = false;
-bool bUpSlackPressed = false;
-bool bAllOutPressed = false;
+enum
+{
+    INPUT_UPSLACK = 0,
+    INPUT_ALLOUT,
+    INPUT_STOP,
+    INPUT_COUNT
+};
+
+struct Input InputStates[INPUT_COUNT];
+bool RawInputStates[INPUT_COUNT];
 
 bool bBuzzer = false;
 bool bLamp1 = false;
@@ -46,13 +56,21 @@ void* LightsThread(void *arg)
 
     while(bRunning)
     {
-        Winch_Process(bStopPressed, bUpSlackPressed, bAllOutPressed);
+        Inputs_TimedProcess(InputStates, TICK_DURATION_MS);   
         Winch_TimedProcess(TICK_DURATION_MS);
 
-        printf("  US:[%c] AA:[%c] Stop:[%c] Buzzer:{%c} LLamp:(%c) RLamp:(%c)  \r",
-               bUpSlackPressed ? 'x' : ' ',
-               bAllOutPressed ? 'x' : ' ',
-               bStopPressed ? 'x' : ' ',
+        Inputs_Process(InputStates, RawInputStates);
+        Winch_Process(Inputs_GetLogicalState(InputStates[INPUT_STOP]),
+                      Inputs_GetLogicalState(InputStates[INPUT_UPSLACK]),
+                      Inputs_GetLogicalState(InputStates[INPUT_ALLOUT]));
+
+        printf("  US:[%c%c] AA:[%c%c] Stop:[%c%c] Buzzer:{%c} LLamp:(%c) RLamp:(%c)  \r",
+               RawInputStates[INPUT_UPSLACK] ? '|' : ' ',
+               Inputs_GetLogicalState(InputStates[INPUT_UPSLACK]) ? 'x' : ' ',
+               RawInputStates[INPUT_ALLOUT] ? '|' : ' ',
+               Inputs_GetLogicalState(InputStates[INPUT_ALLOUT]) ? 'x' : ' ',
+               RawInputStates[INPUT_STOP] ? '|' : ' ',
+               Inputs_GetLogicalState(InputStates[INPUT_STOP]) ? 'x' : ' ',
                bBuzzer ? '!' : ' ',
                bLamp1 ? '#' : ' ',
                bLamp2 ? '#' : ' ');
@@ -68,6 +86,8 @@ int main()
     int c;
     system ("/bin/stty raw");
 
+    Inputs_Init(InputStates, INPUT_COUNT, INPUT_TRANSITION_TIME);
+
     printf("Z - Up slack    X - All Out    C - Stop    Z+X - Stop Reset (all toggle)\r\n");
     printf("Any other button quits.\r\n");
 
@@ -82,21 +102,21 @@ int main()
                 case 'Z':
                 case 'z':
                 {
-                    bUpSlackPressed = !bUpSlackPressed;
+                    RawInputStates[INPUT_UPSLACK] = !RawInputStates[INPUT_UPSLACK];
                 }
                 break;
 
                 case 'X':
                 case 'x':
                 {
-                    bAllOutPressed = !bAllOutPressed;
+                    RawInputStates[INPUT_ALLOUT] = !RawInputStates[INPUT_ALLOUT];
                 }
                 break;
 
                 case 'C':
                 case 'c':
                 {
-                    bStopPressed = !bStopPressed;
+                    RawInputStates[INPUT_STOP] = !RawInputStates[INPUT_STOP];
                 }
                 break;
 

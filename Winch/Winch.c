@@ -1,7 +1,7 @@
 
 #include "Winch.h"
 
-enum State
+enum WinchState
 {
     STATE_IDLE = 0,     //Awaiting input.
     STATE_UP_SLACK,     //Show up slack sequence.
