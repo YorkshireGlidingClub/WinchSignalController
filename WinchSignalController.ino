@@ -24,7 +24,7 @@ ISR(TCA0_OVF_vect)
     TCA0.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm;
 }
 
-void _Winch_BuzzerState(boolean bOn) { digitalWrite(OUTPUT_BUZZER, bOn); }
+void _Winch_BuzzerState(boolean bOn) { digitalWrite(OUTPUT_BUZZER, !bOn); }
 void _Winch_Lamp1State(boolean bOn) { digitalWrite(OUTPUT_LAMP1, !bOn); }
 void _Winch_Lamp2State(boolean bOn) { digitalWrite(OUTPUT_LAMP2, !bOn); }
 

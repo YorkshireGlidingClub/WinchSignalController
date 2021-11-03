@@ -20,13 +20,13 @@ struct Sequence
 
 unsigned char cState = STATE_IDLE;
 
-unsigned int lSequenceBuzzerUpSlack[] = { 100, 400 };
-unsigned int lSequenceBuzzerAllOut[] = { 50, 150 };
+unsigned int lSequenceBuzzerUpSlack[] = { 300, 450 };
+unsigned int lSequenceBuzzerAllOut[] = { 100, 300 };
 struct Sequence sequenceBuzzerUpSlack = { &lSequenceBuzzerUpSlack[0], 2, 0, false };
 struct Sequence sequenceBuzzerAllOut = { &lSequenceBuzzerAllOut[0], 2, 0, false };
 
-unsigned int lSequenceLampUpSlack[] = { 500, 500 };
-unsigned int lSequenceLampAllOut[] = { 100, 100 };
+unsigned int lSequenceLampUpSlack[] = { 750, 750 };
+unsigned int lSequenceLampAllOut[] = { 200, 200 };
 struct Sequence sequenceLampUpSlack = { &lSequenceLampUpSlack[0], 2, 0, false }; //Lamps alternating.
 struct Sequence sequenceLampAllOut = { &lSequenceLampAllOut[0], 2, 0, false }; //Lamps flashing together.
 //Stop lamp sequence is continuously illuminated.
