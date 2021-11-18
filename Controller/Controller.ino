@@ -1,8 +1,8 @@
 
-#include "Winch/Winch.h"
-#include "Winch/Winch.c"
-#include "Winch/Inputs.h"
-#include "Winch/Inputs.c"
+#include "/home/tobster/WinchSignalController/Winch/Winch.h"
+#include "/home/tobster/WinchSignalController/Winch/Winch.c"
+#include "/home/tobster/WinchSignalController/Winch/Inputs.h"
+#include "/home/tobster/WinchSignalController/Winch/Inputs.c"
 
 //Input and output pin assignments.
 #define INPUT_PIN_UP_SLACK 6
@@ -78,6 +78,8 @@ void loop()
 
 void setup()
 {
+    Winch_Init(false);
+    
     Serial1.begin(9600);
     
     pinMode(OUTPUT_BUZZER, OUTPUT);

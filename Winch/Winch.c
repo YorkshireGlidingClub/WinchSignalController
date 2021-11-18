@@ -10,6 +10,7 @@ struct Sequence
 };
 
 unsigned char cState = STATE_IDLE;
+bool bBuzzOnlyOnStop = false;
 
 unsigned int lSequenceBuzzerUpSlack[] = { 300, 450 };
 unsigned int lSequenceBuzzerAllOut[] = { 100, 300 };
@@ -46,8 +47,38 @@ static bool SequenceIsOn(struct Sequence sequence)
     return sequence.lSequencePosition == 0u;
 }
 
-void Winch_Process(bool bStop, bool bUpSlack, bool bAllOut)
+void Winch_Init(bool bBuzzOnStopOnly)
 {
+    bBuzzOnlyOnStop = bBuzzOnStopOnly;
+}
+
+#ifdef WINCH_REPEATER
+void Winch_SetUpSlack()
+{
+    cState = STATE_UP_SLACK;
+}
+
+void Winch_SetAllOut()
+{
+    cState = STATE_ALL_OUT;
+}
+
+void Winch_SetStop()
+{
+    cState = STATE_STOP;
+}
+
+void Winch_SetIdle()
+{
+    cState = STATE_IDLE;
+}
+
+void Winch_Process()
+#else
+void Winch_Process(bool bStop, bool bUpSlack, bool bAllOut)
+#endif
+{
+    #ifndef WINCH_REPEATER
     //Process state switching based on inputs.
     switch(cState)
     {
@@ -86,6 +117,7 @@ void Winch_Process(bool bStop, bool bUpSlack, bool bAllOut)
             cState = STATE_STOP;
         }
     }
+    #endif
 
     //Process outputs based on state.
     switch(cState)
@@ -106,7 +138,7 @@ void Winch_Process(bool bStop, bool bUpSlack, bool bAllOut)
             ProcessSequence(&lBuzzerSequenceTime, &sequenceBuzzerUpSlack);
             ProcessSequence(&lLampSequenceTime, &sequenceLampUpSlack);
 
-            _Winch_BuzzerState(SequenceIsOn(sequenceBuzzerUpSlack));
+            _Winch_BuzzerState(SequenceIsOn(sequenceBuzzerUpSlack) && !bBuzzOnlyOnStop);
             _Winch_Lamp1State(SequenceIsOn(sequenceLampUpSlack));
             _Winch_Lamp2State(!SequenceIsOn(sequenceLampUpSlack));
         }
@@ -118,7 +150,7 @@ void Winch_Process(bool bStop, bool bUpSlack, bool bAllOut)
             ProcessSequence(&lBuzzerSequenceTime, &sequenceBuzzerAllOut);
             ProcessSequence(&lLampSequenceTime, &sequenceLampAllOut);
 
-            _Winch_BuzzerState(SequenceIsOn(sequenceBuzzerAllOut));
+            _Winch_BuzzerState(SequenceIsOn(sequenceBuzzerAllOut) && !bBuzzOnlyOnStop);
             _Winch_Lamp1State(SequenceIsOn(sequenceLampAllOut));
             _Winch_Lamp2State(SequenceIsOn(sequenceLampAllOut));
         }
