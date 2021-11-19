@@ -5,9 +5,9 @@
 #include "/home/tobster/WinchSignalController/Winch/Winch.c"
 
 //Output pin assignments.
-#define OUTPUT_BUZZER 17
-#define OUTPUT_LAMP1  14
-#define OUTPUT_LAMP2  15
+#define OUTPUT_BUZZER 11
+#define OUTPUT_LAMP1  2
+#define OUTPUT_LAMP2  12
 
 #define INTERRUPT_FREQUENCY_MS  10u     //Timed interrupts occur every this many ms.
 
