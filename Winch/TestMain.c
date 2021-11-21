@@ -85,7 +85,7 @@ int main()
 {
     int c;
     system ("/bin/stty raw");
-
+    Winch_Init(false);
     Inputs_Init(InputStates, INPUT_COUNT, INPUT_TRANSITION_TIME);
 
     printf("Z - Up slack    X - All Out    C - Stop    Z+X - Stop Reset (all toggle)\r\n");

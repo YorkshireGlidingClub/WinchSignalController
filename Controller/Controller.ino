@@ -1,8 +1,8 @@
 
-#include "/home/tobster/WinchSignalController/Winch/Winch.h"
-#include "/home/tobster/WinchSignalController/Winch/Winch.c"
-#include "/home/tobster/WinchSignalController/Winch/Inputs.h"
-#include "/home/tobster/WinchSignalController/Winch/Inputs.c"
+#include "/home/tobster/Desktop/WinchSignalController/WinchSignalController/Winch/Winch.h"
+#include "/home/tobster/Desktop/WinchSignalController/WinchSignalController/Winch/Winch.c"
+#include "/home/tobster/Desktop/WinchSignalController/WinchSignalController/Winch/Inputs.h"
+#include "/home/tobster/Desktop/WinchSignalController/WinchSignalController/Winch/Inputs.c"
 
 //Input and output pin assignments.
 #define INPUT_PIN_UP_SLACK 6
@@ -59,8 +59,8 @@ void loop()
     Inputs_Process(InputStates, RawInputStates);
     
     Winch_Process(Inputs_GetLogicalState(InputStates[INPUT_STOP]),
-                  Inputs_GetLogicalState(InputStates[INPUT_PIN_ALL_OUT]),
-                  Inputs_GetLogicalState(InputStates[INPUT_PIN_STOP]));
+                  Inputs_GetLogicalState(InputStates[INPUT_UPSLACK]),
+                  Inputs_GetLogicalState(InputStates[INPUT_ALLOUT]));
 
     if(lTransmitTimer > TRANSMIT_FREQUENCY)
     {
