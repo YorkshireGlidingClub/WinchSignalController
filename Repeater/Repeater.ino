@@ -5,9 +5,10 @@
 #include "/home/tobster/WinchSignalController/Winch/Winch.c"
 
 //Output pin assignments.
-#define OUTPUT_BUZZER 11
-#define OUTPUT_LAMP1  2
-#define OUTPUT_LAMP2  12
+#define OUTPUT_BUZZER   11
+#define OUTPUT_LAMP1    2
+#define OUTPUT_LAMP2    12
+#define OUTPUT_NO_COMMS 3
 
 #define INTERRUPT_FREQUENCY_MS  10u     //Timed interrupts occur every this many ms.
 
@@ -18,27 +19,30 @@
 #define CHAR_STOP     'S'
 #define CHAR_NOWT     'N'
 
-char cLastCommand = '0';
-unsigned int lLastCommandTime;
+unsigned int lLastCommandTime = 0;
+
+bool bLED = false;
 
 //10ms interrupt.
-ISR(TCA0_OVF_vect)
+ISR(TIMER1_COMPA_vect)
 {
     Winch_TimedProcess(INTERRUPT_FREQUENCY_MS);
     lLastCommandTime += INTERRUPT_FREQUENCY_MS;
-    
-    TCA0.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm;
 }
 
 void _Winch_BuzzerState(boolean bOn) { digitalWrite(OUTPUT_BUZZER, !bOn); }
-void _Winch_Lamp1State(boolean bOn) { digitalWrite(OUTPUT_LAMP1, !bOn); }
-void _Winch_Lamp2State(boolean bOn) { digitalWrite(OUTPUT_LAMP2, !bOn); }
+void _Winch_Lamp1State(boolean bOn) { digitalWrite(OUTPUT_LAMP1, bOn); }
+void _Winch_Lamp2State(boolean bOn) { digitalWrite(OUTPUT_LAMP2, bOn); }
 
 void loop()
 {
-    while(Serial.available())
+    char cLastCommand = '0';
+
+    while(Serial1.available())
     {
-        cLastCommand = Serial.read();
+        cLastCommand = Serial1.read();
+        bLED = !bLED;
+        digitalWrite(LED_BUILTIN, bLED? HIGH : LOW);
     }
 
     switch(cLastCommand)
@@ -71,6 +75,16 @@ void loop()
         }
         break;
     }
+
+    if(lLastCommandTime > COMMS_TIMEOUT)
+    {
+        Winch_SetIdle();
+        digitalWrite(OUTPUT_NO_COMMS, true);
+    }
+    else
+    {
+        digitalWrite(OUTPUT_NO_COMMS, false);
+    }
     
     Winch_Process();
 }
@@ -78,19 +92,22 @@ void loop()
 void setup()
 {
     Winch_Init(true);
-    
+    pinMode(LED_BUILTIN, OUTPUT);
     Serial1.begin(9600);
     
     pinMode(OUTPUT_BUZZER, OUTPUT);
     pinMode(OUTPUT_LAMP1, OUTPUT);
     pinMode(OUTPUT_LAMP2, OUTPUT);
+    pinMode(OUTPUT_NO_COMMS, OUTPUT);
     
-    //Configure timed interrupts.
-    TCA0.SINGLE.INTCTRL = TCA_SINGLE_OVF_bm;
-    TCA0.SINGLE.CTRLB = TCA_SINGLE_WGMODE_NORMAL_gc;
-    TCA0.SINGLE.EVCTRL &= ~(TCA_SINGLE_CNTEI_bm);
-    TCA0.SINGLE.PER = 0x0271;
-    TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV256_gc | TCA_SINGLE_ENABLE_bm;
+    //Configure timed 10ms interrupts on Timer/Counter 1 (ATMega23U4).
+    TCCR1A = 0;
+    TCCR1B = 0x0C;
+    TCCR1C = 0;
+    TCNT1 = 0;
+    OCR1A = 0x0271;
+    TIMSK1 = 2;
+    
 
     //Enable interrupts.
     sei();
